@@ -45,4 +45,5 @@ public class PlayerScript : MonoBehaviour
     {
         animator.SetTrigger("HitTrigger");
     }
+
 }

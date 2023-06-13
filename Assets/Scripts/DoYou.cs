@@ -21,7 +21,7 @@ public class DoYou : MonoBehaviour
         HPanel.SetActive(false);
         PanelResult.SetActive(false);
         StartCoroutine(ShowButtonWithDelay()); //Запуск функции для запуска панели
-        questionText.text = "Do you want fight with KING?"; // При запуске сцены задаем текст вопроса
+        questionText.text = "Do you want to fight against the king?"; // При запуске сцены задаем текст вопроса
     }
     private IEnumerator ShowButtonWithDelay()
     {

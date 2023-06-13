@@ -2,111 +2,102 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Events;
 
 public class GameLogic : MonoBehaviour
 {
-    public enum Hand { Rock, Paper, Scissors, Block }
-    public Hand playerHand;
-    public Hand computerHand;
-    
-    public int health = 5;
-    public int enemyhealth = 5;
+    public enum Hand { Rock, Paper, Scissors, Block } //возможный вариант выбора руки
 
-    public Text result;
-    public Text textgameresult;
-    public Text HP;
-    public Text EnemyHP;
-    public Text GameOver;
+    public Hand playerHand; //рука игрока
+    public Hand computerHand; //рука бота
 
-    public GameObject PanelResult;
-    public GameObject GameResult;
-    public GameObject PanelHP;
-    public GameObject playerObject;
-    public GameObject EnemyObject;
-    public GameObject DefenseObject;
+    public int health = 5; //здоровье игрока
+    public int enemyhealth = 5; //здоровье бота
 
-    private PlayerScript playerScript;
-    private EnemyScript enemyScript;
+    public Text resultText; //текст результата раунда
+    public Text textgameresult; //текст результата игры
+    public Text playerHealthText; //текст количества оставшегося здоровья игрока
+    public Text enemyHealthText; //текст количества оставшегося здоровья бота
 
-   [SerializeField] private int blockCounterEnemy = 0;
-   [SerializeField] private int blockCounterPlayer = 0;
-    private const int blockIntervalEnemy = 3;
-    private const int blockIntervalPlayer = 3;
+    public GameObject panelResult; //Панель результата раунда
+    public GameObject gameResult; //Панель результата игры
+    public GameObject playerObject; //Игрок
+    public GameObject enemyObject; //Бот
+    public GameObject defenseObject; //Кнопка Блока
 
+    private PlayerScript playerScript; //Обращение к классу игрока
+    private EnemyScript enemyScript; //Обращение к классу бота
 
-    // Скрипты
+    [SerializeField] private int blockCounterEnemy = 0; //Количество ходов после выбора блока у бота
+    [SerializeField] private int blockCounterPlayer = 0; //Количество ходов после выбора блока у игрока
+    private const int blockIntervalEnemy = 3; //Через сколько ходов должно пройти, чтобы можно было использовать блок боту
+    private const int blockIntervalPlayer = 3; //Через сколько ходов должно пройти, чтобы можно было использовать блок игроку
 
-    private void Start()
+    private void Start() //При запуске сцены
     {
-        GameResult.SetActive(false);
-        DefenseObject.SetActive(false);
+        gameResult.SetActive(false);
+        defenseObject.SetActive(false);
         playerScript = playerObject.GetComponent<PlayerScript>();
-        enemyScript = EnemyObject.GetComponent<EnemyScript>();
+        enemyScript = enemyObject.GetComponent<EnemyScript>();
     }
 
-    public void SetPlayerHand(int handIndex)
+    public void SetPlayerHand(int handIndex) //Выбор руки игроком и запуск раунда
     {
         playerHand = (Hand)handIndex;
         PlayRound();
     }
 
-    private void PlayRound()
+    private void PlayRound() //Запуск раунда
     {
-        computerHand = GetComputerHand();
+        computerHand = GetComputerHand(); //Бот выбирает удар
 
         if (playerHand == computerHand) //Ничья
         {
-            result.text = "50/50";
-            if (computerHand == Hand.Block)
+            resultText.text = "50/50";
+            if (computerHand == Hand.Block) //Оба в блоке
             {
-                result.text = "Together Block!";
+                resultText.text = "Together Block!";
                 blockCounterEnemy = 0;
             }
         }
-
-        else if ( //Игрок победил
-            (playerHand == Hand.Rock && computerHand == Hand.Scissors) ||
-            (playerHand == Hand.Paper && computerHand == Hand.Rock) ||
-            (playerHand == Hand.Scissors && computerHand == Hand.Paper)
-        )
+        else if (IsPlayerWin(playerHand, computerHand)) //Победа в раунде игрока
         {
-            result.text = "Enemy -1 HP";
+            resultText.text = "Enemy -1 HP";
             enemyhealth--;
         }
-
-        else if (
-            (playerHand == Hand.Block && computerHand == Hand.Scissors) ||
-            (playerHand == Hand.Block && computerHand == Hand.Rock) ||
-            (playerHand == Hand.Block && computerHand == Hand.Paper)
-        )
+        else if (playerHand == Hand.Block && IsComputerWin(computerHand, playerHand)) //Игрок в блоке
         {
-            result.text = "Block!";
+            resultText.text = "Block!";
         }
-
-        else if (
-            (computerHand == Hand.Block && playerHand == Hand.Scissors) ||
-            (computerHand == Hand.Block && playerHand == Hand.Rock) ||
-            (computerHand == Hand.Block && playerHand == Hand.Paper)
-        )
+        else if (computerHand == Hand.Block && IsComputerWin(computerHand, playerHand)) //Бот в блоке
         {
-            result.text = "Enemy Block!";
+            resultText.text = "Enemy Block!";
             blockCounterEnemy = 0;
         }
-
-        else if ( //Бот победил
-            (computerHand == Hand.Rock && playerHand == Hand.Scissors) ||
-            (computerHand == Hand.Paper && playerHand == Hand.Rock) ||
-            (computerHand == Hand.Scissors && playerHand == Hand.Paper)
-            )
+        else if (IsComputerWin(computerHand, playerHand)) //Победа в раунде бота
         {
-            result.text = "-1 HP";
+            resultText.text = "-1 HP";
             health--;
             playerScript.HitT();
         }
 
-        
-        switch (computerHand) // Вызов анимации у врага в зависимости от выпавшей руки
+        PlayEnemyAnimation(computerHand); //Анимация бота
+    }
+
+    private bool IsPlayerWin(Hand player, Hand computer)
+    {
+        return (player == Hand.Rock && computer == Hand.Scissors) ||
+               (player == Hand.Paper && computer == Hand.Rock) ||
+               (player == Hand.Scissors && computer == Hand.Paper);
+    }
+
+    private bool IsComputerWin(Hand computer, Hand player)
+    {
+        return IsPlayerWin(computer, player);
+    }
+
+    private void PlayEnemyAnimation(Hand hand) //Запуск анимации бота
+    {
+        switch (hand)
         {
             case Hand.Rock:
                 enemyScript.EnemyRock();
@@ -120,30 +111,30 @@ public class GameLogic : MonoBehaviour
         }
     }
 
-    public void GetBlockPlayer()
+    public void GetBlockPlayer() //Включается кнопка блока
     {
-        if (blockCounterPlayer >= blockIntervalPlayer) // Если количество ходов с последнего блока >= 3 ходов
+        if (blockCounterPlayer >= blockIntervalPlayer)
         {
-            DefenseObject.SetActive(true);
+            defenseObject.SetActive(true);
         }
     }
 
-    public void DefenseButton()
+    public void DefenseButton() //Выключается кнопка блока
     {
         blockCounterPlayer = 0;
-        DefenseObject.SetActive(false);
+        defenseObject.SetActive(false);
     }
 
-    public void CounterPlayer()
+    public void CounterPlayer() //Подсчёт ходов без блока
     {
         blockCounterPlayer++;
     }
 
-    private Hand GetComputerHand()
+    private Hand GetComputerHand() //Бот выбирает наугад руку
     {
         Hand selectedHand;
 
-        if (blockCounterEnemy >= blockIntervalEnemy) // Если количество ходов с последнего блока >= 3 ходов
+        if (blockCounterEnemy >= blockIntervalEnemy)
         {
             selectedHand = (Hand)Random.Range(0, 4);
         }
@@ -152,23 +143,25 @@ public class GameLogic : MonoBehaviour
             selectedHand = (Hand)Random.Range(0, 3);
             blockCounterEnemy++;
         }
+
         return selectedHand;
     }
 
-    private void Update()
+    private void Update() //Постоянное обновление информации
     {
-        HP.text = health.ToString();
-        EnemyHP.text = enemyhealth.ToString();
+        playerHealthText.text = health.ToString();
+        enemyHealthText.text = enemyhealth.ToString();
+
         if (health <= 0)
         {
-            PanelResult.SetActive(false);
-            GameResult.SetActive(true);
+            panelResult.SetActive(false);
+            gameResult.SetActive(true);
             textgameresult.text = "You're too weak! It's over.";
         }
         else if (enemyhealth <= 0)
         {
-            PanelResult.SetActive(false);
-            GameResult.SetActive(true);
+            panelResult.SetActive(false);
+            gameResult.SetActive(true);
             textgameresult.text = "You're the new KING!";
         }
     }
