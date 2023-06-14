@@ -23,9 +23,11 @@ public class GameLogic : MonoBehaviour
     public GameObject playerObject; //Игрок
     public GameObject enemyObject; //Бот
     public GameObject defenseObject; //Кнопка Блока
+    public GameObject indObject; //Индикатор
 
     private PlayerScript playerScript; //Обращение к классу игрока
     private EnemyScript enemyScript; //Обращение к классу бота
+    private EnemyIndicator enemyInd; //Обращение к классу индикатора удара бота
 
     [SerializeField] private int blockCounterEnemy = 0; //Количество ходов после выбора блока у бота
     [SerializeField] private int blockCounterPlayer = 0; //Количество ходов после выбора блока у игрока
@@ -38,12 +40,18 @@ public class GameLogic : MonoBehaviour
         defenseObject.SetActive(false);
         playerScript = playerObject.GetComponent<PlayerScript>();
         enemyScript = enemyObject.GetComponent<EnemyScript>();
+        enemyInd = indObject.GetComponent<EnemyIndicator>();
     }
 
     public void SetPlayerHand(int handIndex) //Выбор руки игроком и запуск раунда
     {
         playerHand = (Hand)handIndex;
         PlayRound();
+    }
+
+    private bool IsComputerWin(Hand computer, Hand player)
+    {
+        return IsPlayerWin(computer, player);
     }
 
     private void PlayRound() //Запуск раунда
@@ -59,19 +67,20 @@ public class GameLogic : MonoBehaviour
                 blockCounterEnemy = 0;
             }
         }
+        else if (playerHand == Hand.Block && IsPlayerWin(computerHand, playerHand)) //Игрок в блоке
+        {
+            resultText.text = "Block!";
+        }
         else if (IsPlayerWin(playerHand, computerHand)) //Победа в раунде игрока
         {
             resultText.text = "Enemy -1 HP";
             enemyhealth--;
         }
-        else if (playerHand == Hand.Block && IsComputerWin(computerHand, playerHand)) //Игрок в блоке
-        {
-            resultText.text = "Block!";
-        }
-        else if (computerHand == Hand.Block && IsComputerWin(computerHand, playerHand)) //Бот в блоке
+        else if (computerHand == Hand.Block && IsPlayerWin(computerHand, playerHand)) //Бот в блоке
         {
             resultText.text = "Enemy Block!";
             blockCounterEnemy = 0;
+            Debug.Log("block");
         }
         else if (IsComputerWin(computerHand, playerHand)) //Победа в раунде бота
         {
@@ -87,12 +96,8 @@ public class GameLogic : MonoBehaviour
     {
         return (player == Hand.Rock && computer == Hand.Scissors) ||
                (player == Hand.Paper && computer == Hand.Rock) ||
-               (player == Hand.Scissors && computer == Hand.Paper);
-    }
-
-    private bool IsComputerWin(Hand computer, Hand player)
-    {
-        return IsPlayerWin(computer, player);
+               (player == Hand.Scissors && computer == Hand.Paper) ||
+               (player == Hand.Block && computer != Hand.Block);
     }
 
     private void PlayEnemyAnimation(Hand hand) //Запуск анимации бота
@@ -100,12 +105,15 @@ public class GameLogic : MonoBehaviour
         switch (hand)
         {
             case Hand.Rock:
+                enemyInd.EnemyRockInd();
                 enemyScript.EnemyRock();
                 break;
             case Hand.Scissors:
+                enemyInd.EnemyScissorsInd();
                 enemyScript.EnemyScissors();
                 break;
             case Hand.Paper:
+                enemyInd.EnemyPaperInd();
                 enemyScript.EnemyPapper();
                 break;
         }
@@ -147,7 +155,7 @@ public class GameLogic : MonoBehaviour
         return selectedHand;
     }
 
-    private void Update() //Постоянное обновление информации
+    private void Update() 
     {
         playerHealthText.text = health.ToString();
         enemyHealthText.text = enemyhealth.ToString();

@@ -59,6 +59,7 @@
     <Compile Include="Assets\Scripts\DoYou.cs" />
     <Compile Include="Assets\Scripts\PlayerScript.cs" />
     <Compile Include="Assets\Scripts\EnemyScript.cs" />
+    <Compile Include="Assets\Scripts\EnemyIndicator.cs" />
     <Compile Include="Assets\Scripts\GameLogic.cs" />
     <Compile Include="Assets\Scripts\PlayButton.cs" />
   </ItemGroup>
